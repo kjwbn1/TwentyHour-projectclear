@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_home"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_home_24px"
+        android:title="@string/home"
+        android:visible="true"
+        android:fitsSystemWindows="true"/>
+
+    <item
+        android:id="@+id/action_search"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_favorite_24px"
+        android:title="즐겨찾기"
+        android:visible="true"
+        android:fitsSystemWindows="true"/>
+
+    <item
+        android:id="@+id/action_contact"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_account_box_24px"
+        android:title="@string/contact"
+        android:visible="true"
+        android:fitsSystemWindows="true"/>
+    <item
+        android:id="@+id/action_more"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_more_horiz_24px"
+        android:title="@string/more"
+        android:visible="true"
+        android:fitsSystemWindows="true"/>
+
+
+
+</menu>

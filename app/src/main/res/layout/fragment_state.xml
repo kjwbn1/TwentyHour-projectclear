@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+
+
+    <LinearLayout
+        android:paddingTop="100dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+
+
+
+        <Button
+            android:id="@+id/btn_search"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginRight="16dp"
+
+            android:fontFamily="@font/netmarblem"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+
+
+
+        <Button
+            android:id="@+id/btn_day"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="16dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:fontFamily="@font/netmarblem"
+            android:text = "날짜 선택" />
+
+
+        <FrameLayout
+            android:id="@+id/calendar_frame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+        </FrameLayout>
+
+
+        <Button
+            android:id="@+id/btn_time_s"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="16dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text = "시간 선택"
+            android:animateLayoutChanges="true"
+            android:fontFamily="@font/netmarblem" />
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tablayout"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:animateLayoutChanges="true">
+        </android.support.design.widget.TabLayout>
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/viewpager"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:visibility="gone"
+            android:animateLayoutChanges="true">
+        </android.support.v4.view.ViewPager>
+
+
+        <Button
+            android:id="@+id/btn_game_select"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:paddingStart="8dp"
+            android:text = "메뉴선택"
+            android:fontFamily="@font/netmarblem"/>
+
+
+        <Button
+            android:id="@+id/btn_select_complete"
+            android:layout_width="match_parent"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="78dp"
+            android:layout_marginBottom="50dp"
+            android:text="선택완료"
+            android:textColor="@android:color/white"
+            android:fontFamily="@font/netmarbleb"
+            />
+    </LinearLayout>
+
+</ScrollView>
