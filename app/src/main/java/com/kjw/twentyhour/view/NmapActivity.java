@@ -1,27 +1,12 @@
 package com.kjw.twentyhour.view;
-/*
- * Copyright 2016 NAVER Corp.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -32,16 +17,21 @@ import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.kjw.twentyhour.R;
 import com.kjw.twentyhour.data.Okjson;
+import com.kjw.twentyhour.data.Time;
+import com.kjw.twentyhour.factory.StoreFactory;
+import com.kjw.twentyhour.listener.StoreBranch;
+import com.kjw.twentyhour.listener.StoreData;
 import com.kjw.twentyhour.map.NMapCalloutCustomOldOverlay;
 import com.kjw.twentyhour.map.NMapPOIflagType;
 import com.kjw.twentyhour.map.NMapViewerResourceProvider;
+import com.kjw.twentyhour.model.Staff;
+import com.kjw.twentyhour.network.MySingleton;
 import com.nhn.android.maps.NMapActivity;
 import com.nhn.android.maps.NMapCompassManager;
 import com.nhn.android.maps.NMapController;
@@ -60,6 +50,8 @@ import com.nhn.android.mapviewer.overlay.NMapMyLocationOverlay;
 import com.nhn.android.mapviewer.overlay.NMapOverlayManager;
 import com.nhn.android.mapviewer.overlay.NMapPOIdataOverlay;
 
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,13 +61,15 @@ import java.util.Map;
  * @author kyjkim
  */
 public class NmapActivity extends NMapActivity  {
+
     private static final String LOG_TAG = "NmapActivity";
     private static final boolean DEBUG = false;
-
+    private static final String NAVERMAPURL = "https://openapi.naver.com/v1/map/reversegeocode?"+" encoding=utf-8&coordType=latlng&query=";
     // set your Client ID which is registered for NMapViewer library.
     private static final String CLIENT_ID = "pJ4dLhVpOHDtq762zrhh";
 
     private MapContainerView mMapContainerView;
+    SharedPreferences mSharedPreferences;
 
     private NMapView mMapView;
     private NMapController mMapController;
@@ -104,26 +98,21 @@ public class NmapActivity extends NMapActivity  {
     private NMapViewerResourceProvider mMapViewerResourceProvider;
 
     private NMapPOIdataOverlay mFloatingPOIdataOverlay;
-    private NMapPOIdataOverlay mFixPOIdataOverlay;
+    private NMapPOIdataOverlay mNMapPOIdataOverlay;
     private NMapPOIitem mFloatingPOIitem;
     private NMapPOIitem mFixPOIitem;
+    private NMapPOIdata poidata;
+    ArrayList<StoreBranch> ss;
 
-    private Context context;
+    SharedPreferences.Editor edit;
 
     private String clientId = "pJ4dLhVpOHDtq762zrhh";
     private String clientSecret = "RAy133RV9k";
-
-    private String result;
-    private String addr;
-
-    private StringRequest stringRequest;
-    private RequestQueue queue;
+    int markerId;
 
     static Double x;
     static Double y;
-
-    private NmapActivity nmapActivity;
-
+    StoreFactory storeFactory;
 
     private static boolean USE_XML_LAYOUT = false;
 
@@ -133,94 +122,160 @@ public class NmapActivity extends NMapActivity  {
         super.onCreate(savedInstanceState);
 
         if (USE_XML_LAYOUT) {
-            setContentView(R.layout.activity_nmap);
-
+            setContentView(R.layout.activity_naver_map);
             mMapView = (NMapView)findViewById(R.id.mapView);
         } else {
-            // create map view
             mMapView = new NMapView(this);
-
-            // create parent view to rotate map view
             mMapContainerView = new MapContainerView(this);
             mMapContainerView.addView(mMapView);
-
-            // set the activity content to the parent view
             setContentView(mMapContainerView);
         }
+        initSharedPreferences();
 
-        // set a registered Client Id for Open MapViewer Library
         mMapView.setClientId(CLIENT_ID);
-
-        // initialize map view
         mMapView.setClickable(true);
         mMapView.setEnabled(true);
         mMapView.setFocusable(true);
         mMapView.setFocusableInTouchMode(true);
         mMapView.requestFocus();
 
-        // register listener for map state changes
         mMapView.setOnMapStateChangeListener(onMapViewStateChangeListener);
         mMapView.setOnMapViewTouchEventListener(onMapViewTouchEventListener);
         mMapView.setOnMapViewDelegate(onMapViewTouchDelegate);
 
-        // use map controller to zoom in/out, pan and set map center, zoom level etc.
         mMapController = mMapView.getMapController();
 
-        // use built in zoom controls
         NMapView.LayoutParams lp = new NMapView.LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT, NMapView.LayoutParams.BOTTOM_RIGHT);
         mMapView.setBuiltInZoomControls(true, lp);
 
-        // create resource provider
         mMapViewerResourceProvider = new NMapViewerResourceProvider(this);
 
-        // set data provider listener
         super.setMapDataProviderListener(onDataProviderListener);
 
-        // create overlay manager
         mOverlayManager = new NMapOverlayManager(this, mMapView, mMapViewerResourceProvider);
-        // register callout overlay listener to customize it.
         mOverlayManager.setOnCalloutOverlayListener(onCalloutOverlayListener);
         // register callout overlay view listener to customize it.
 //        mOverlayManager.setOnCalloutOverlayViewListener(onCalloutOverlayViewListener);
 
 //        // location manager
-//        mMapLocationManager = new NMapLocationManager(this);
-//        mMapLocationManager.setOnLocationChangeListener(onMyLocationChangeListener);
+        mMapLocationManager = new NMapLocationManager(this);
+        mMapLocationManager.setOnLocationChangeListener(onMyLocationChangeListener);
 
-        // compass manager
         mMapCompassManager = new NMapCompassManager(this);
-
-        // create my location overlay
-//        mMyLocationOverlay = mOverlayManager.createMyLocationOverlay(mMapLocationManager, mMapCompassManager);
+        mMyLocationOverlay = mOverlayManager.createMyLocationOverlay(mMapLocationManager, mMapCompassManager);
 
         mOverlayManager.clearOverlays();
 
+        markerId = NMapPOIflagType.PIN;
 
-        context = NmapActivity.this;
+
+        ObjectMapper mapper = new ObjectMapper();
+        StoreData sd = new StoreData();
+        StoreBranch sb = new StoreBranch(sd, "");
+        Time time = new Time();
+        Okjson okjson = new Okjson();
+        Staff staff = new Staff();
+
+
 
         startMyLocation();
+        startOverLayout();
 
-        testPOIdataOverlay();
+        }
+
+    public void startOverLayout() {
+        NMapPOIdata poiData = new NMapPOIdata(10, mMapViewerResourceProvider);
+        poiData.beginPOIdata(0);
+        NMapPOIitem item = poiData.addPOIitem(127.0630205, 37.5091300, "", markerId, 0);
+        poiData.addPOIitem(126.9190839,37.4932598, "", markerId, 1);
+        poiData.addPOIitem(126.9587816,37.4438063, "", markerId, 2);
+        poiData.addPOIitem(126.930166,37.484454,"",markerId,3);
+//        르네상스
+        poiData.addPOIitem(126.930080,37.483844,"",markerId,4);
+//        포토몰
+        poiData.addPOIitem(126.929329,37.483874,"",markerId,5);
+//        롯데리아
+        poiData.addPOIitem(126.926935,37.487258,"",markerId,6);
+//        보라메공원
+        item.setRightAccessory(true, NMapPOIflagType.CLICKABLE_ARROW);
+        poiData.endPOIdata();
+
+        StoreData storeData = new StoreData();
+        storeFactory = new StoreFactory();
 
 
 
 
+        for(int i =0; i < poiData.count(); i++ ) {
+
+            NMapPOIitem Items = poiData.getPOIitem(i);
+            NGeoPoint point = Items.getPoint();
+            x = point.latitude;
+            y = point.longitude;
+            String url = NAVERMAPURL + y + "," + x ;
+
+            CalculatorcloseDistence(x , y);
+
+            storeFactory.createStoreBranch(i,storeData);
+            StoreBranch storeBranch = storeFactory.getStoreFranches().get(i);
+
+            StringRequest stringRequest = new StringRequest(Request.Method.GET,  url,
+                    response -> {
+
+                        Gson gson = new Gson();
+
+                        Okjson asshole = gson.fromJson(response , Okjson.class);
+
+                        String address = asshole.getResult().getItems().get(1).address;
+                        Double longitude = asshole.getResult().getItems().get(1).getPoint().getX();
+                        Double latitude = asshole.getResult().getItems().get(1).getPoint().getY();
+                        Items.setTitle(address);
+                        storeBranch.setAddress(address);
+                        storeBranch.setLongitude(longitude);
+                        storeBranch.setLatitude(latitude);
 
 
+                        },
+
+                    error -> { })
+            {
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> headers = new HashMap<String, String>();
+                    headers.put("X-Naver-Client-Id" , clientId);
+                    headers.put("X-Naver-Client-Secret", clientSecret);
+                    return headers;
+                }
+            };
+
+
+
+            MySingleton.getInstance(this).addToRequestQueue(stringRequest);
+
+        }
+        NMapPOIdataOverlay poiDataOverlay = mOverlayManager.createPOIdataOverlay(poiData, null);
+        poiDataOverlay.setOnStateChangeListener(onPOIdataStateChangeListener);
+        poiDataOverlay.selectPOIitem(0, true);
+        mNMapPOIdataOverlay = poiDataOverlay;
 
 
     }
 
+    private void CalculatorcloseDistence(Double longitude, Double latitude) {
 
 
 
 
+        NGeoPoint nGeoPointFrom = new NGeoPoint();
+        nGeoPointFrom.set(longitude, latitude);
 
+    }
 
     @Override
     protected void onStart() {
         super.onStart();
+
     }
 
     @Override
@@ -230,10 +285,17 @@ public class NmapActivity extends NMapActivity  {
 
     @Override
     protected void onStop() {
-
-        stopMyLocation();
-
         super.onStop();
+        stopMyLocation();
+        storeFactory.getStoreFranches().get(1);
+
+    }
+
+    private void initSharedPreferences() {
+
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        edit = mSharedPreferences.edit();
+
     }
 
     @Override
@@ -300,151 +362,6 @@ public class NmapActivity extends NMapActivity  {
         }
     }
 
-    private void testPOIdataOverlay()  {
-        // Markers for POI item
-        int markerId = NMapPOIflagType.PIN;
-
-        // set POI data
-        NMapPOIdata poiData = new NMapPOIdata(3, mMapViewerResourceProvider);
-        poiData.beginPOIdata(3);
-        NMapPOIitem item = poiData.addPOIitem(127.0630205, 37.5091300, "", markerId, 0);
-        poiData.addPOIitem(126.9190839,37.4932598, "", markerId, 1);
-        poiData.addPOIitem(126.9587816,37.4438063, "", markerId, 2);
-        item.setRightAccessory(true, NMapPOIflagType.CLICKABLE_ARROW);
-
-
-
-//
-        for(int i =0; i < poiData.count(); i++ ) {
-
-            NMapPOIitem itemList = poiData.getPOIitem(i);
-            NGeoPoint point = itemList.getPoint();
-            mFixPOIitem = itemList;
-
-            x = point.latitude;
-            y = point.longitude;
-
-            String url = "https://openapi.naver.com/v1/map/reversegeocode?"+" encoding=utf-8&coordType=latlng&query=" + y + "," + x ;
-
-            queue = Volley.newRequestQueue(this);
-
-
-            stringRequest = new StringRequest(Request.Method.GET,  url,
-                    response -> {
-
-                        Gson gson = new Gson();
-
-                        Okjson asshole = gson.fromJson(response , Okjson.class);
-
-                        itemList.setTitle(asshole.getResult().getItems().get(1).address);
-
-
-                        },
-
-                    error -> {
-
-
-
-                    }) {
-
-                @Override
-                public Map<String, String> getHeaders() throws AuthFailureError {
-                    Map<String, String> headers = new HashMap<String, String>();
-                    headers.put("X-Naver-Client-Id" , clientId);
-                    headers.put("X-Naver-Client-Secret", clientSecret);
-                    return headers;
-                }
-            };
-
-
-            queue.add(stringRequest);
-
-
-        }
-
-//        y=126.9190839;
-//        x=37.4932598;
-//
-//
-
-
-//
-//        String x = URLEncoder.encode("126.9587816,37", "UTF-8");
-//        String y = URLEncoder.encode("37.4438063", "UTF-8");
-//                        String addr = URLEncoder.encode("불정로 9", "UTF-8");
-//        String url = "https://openapi.naver.com/v1/map/reversegeocode?"+" encoding=utf-8&coordType=latlng&query=" +y+ "," + x ; //json
-
-
-//            String apiURL = "https://openapi.naver.com/v1/map/reversegeocode?"+addr;
-//            String apiURL = "https://openapi.naver.com/v1/map/geocode.xml?query=" + addr; // xml
-//            String apiURL = "https://openapi.naver.com/v1/map/geocode?query=" + addr; // xml
-
-
-//        String url = "https://openapi.naver.com/v1/map/reversegeocode? encoding=utf-8&coordType=latlng&query=126.9587816,37.4438063";
-
-
-//        queue = Volley.newRequestQueue(this);
-//
-//
-//        stringRequest = new StringRequest(Request.Method.GET,  url,
-//                response -> {
-//
-//
-//                        result = response.toString();
-//
-////                        result = "${response.substring(0, 500)}";
-//
-//                        Gson gson = new Gson();
-//
-////                        Okjson asshole = new Okjson();
-////
-//                        Okjson asshole = gson.fromJson(result , Okjson.class);
-////
-//                        addr = asshole.getResult().getItems().get(1).address;
-//
-//                        updateFromDownload(addr);
-//
-//
-//
-//                },
-//                error -> {
-//
-//
-//
-//                }) {
-//
-//            @Override
-//            public Map<String, String> getHeaders() throws AuthFailureError {
-//                Map<String, String> headers = new HashMap<String, String>();
-//                headers.put("X-Naver-Client-Id" , clientId);
-//                headers.put("X-Naver-Client-Secret", clientSecret);
-//                return headers;
-//            }
-//        };
-
-
-
-
-
-
-
-
-//          mDownLoadTask.execute(x,y);
-//        mFixPOIitem = item;
-
-        mFixPOIitem = item;
-        poiData.endPOIdata();
-        NMapPOIdataOverlay poiDataOverlay = mOverlayManager.createPOIdataOverlay(poiData, null);
-        poiDataOverlay.setOnStateChangeListener(onPOIdataStateChangeListener);
-
-        poiDataOverlay.selectPOIitem(0, true);
-
-        mFixPOIdataOverlay = poiDataOverlay;
-
-//        poiDataOverlay.showAllPOIdata(0);
-    }
-
-
     /* NMapDataProvider Listener */
     private final OnDataProviderListener onDataProviderListener = new OnDataProviderListener() {
 
@@ -463,13 +380,13 @@ public class NmapActivity extends NMapActivity  {
                 return;
             }
 
-            if (mFixPOIitem != null && mFixPOIdataOverlay != null) {
-                mFixPOIdataOverlay.deselectFocusedPOIitem();
+            if (mFixPOIitem != null && mNMapPOIdataOverlay != null) {
+                mNMapPOIdataOverlay.deselectFocusedPOIitem();
 
                 if (placeMark != null) {
                     mFixPOIitem.setTitle(placeMark.toString());
                 }
-                mFixPOIdataOverlay.selectPOIitemBy(mFixPOIitem.getId(), false);
+                mNMapPOIdataOverlay.selectPOIitemBy(mFixPOIitem.getId(), false);
             }
         }
 
@@ -738,6 +655,7 @@ public class NmapActivity extends NMapActivity  {
 //        }
 //
 //    };
+
     /* Local Functions */
     private static boolean mIsMapEnlared = false;
 
@@ -782,6 +700,7 @@ public class NmapActivity extends NMapActivity  {
         edit.putInt(KEY_VIEW_MODE, viewMode);
         edit.putBoolean(KEY_TRAFFIC_MODE, trafficMode);
         edit.putBoolean(KEY_BICYCLE_MODE, bicycleMode);
+
 
         edit.commit();
 

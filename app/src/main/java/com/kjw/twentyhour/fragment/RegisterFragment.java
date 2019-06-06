@@ -1,18 +1,17 @@
 package com.kjw.twentyhour.fragment;
 
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+
+
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.*;
 
 
 import com.google.gson.Gson;
@@ -46,6 +45,12 @@ public class RegisterFragment extends Fragment {
     private TextInputLayout mTiEmail;
     private TextInputLayout mTiPassword;
     private ProgressBar mProgressbar;
+    private CheckBox mCbPersonal;
+    private CheckBox mCbBusiness;
+    private EditText mBusinessCode;
+    private TextView mBusinessCodeHint;
+
+    int businessCode;
 
     private CompositeSubscription mSubscriptions;
 
@@ -53,16 +58,15 @@ public class RegisterFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_register,container,false);
+        View view = inflater.inflate(R.layout.fragment_register, container, false);
         mSubscriptions = new CompositeSubscription();
         initViews(view);
         return view;
     }
 
     private void initViews(View v) {
-
         mEtName = (EditText) v.findViewById(R.id.et_name);
-        mEtEmail = (EditText) v.findViewById(R.id.et_email);
+        mEtEmail = (EditText) v.findViewById(R.id.tl_email);
         mEtPassword = (EditText) v.findViewById(R.id.et_password);
         mBtRegister = (Button) v.findViewById(R.id.btn_register);
         mTvLogin = (TextView) v.findViewById(R.id.tv_login);
@@ -70,10 +74,17 @@ public class RegisterFragment extends Fragment {
         mTiEmail = (TextInputLayout) v.findViewById(R.id.ti_email);
         mTiPassword = (TextInputLayout) v.findViewById(R.id.ti_password);
         mProgressbar = (ProgressBar) v.findViewById(R.id.progress);
+        mBusinessCode = (EditText) v.findViewById(R.id.tl_business_code);
+
+
 
         mBtRegister.setOnClickListener(view -> register());
         mTvLogin.setOnClickListener(view -> goToLogin());
+
     }
+
+
+
 
     private void register() {
 
@@ -82,6 +93,7 @@ public class RegisterFragment extends Fragment {
         String name = mEtName.getText().toString();
         String email = mEtEmail.getText().toString();
         String password = mEtPassword.getText().toString();
+
 
         int err = 0;
 
@@ -102,6 +114,7 @@ public class RegisterFragment extends Fragment {
             err++;
             mTiPassword.setError("Password should not be empty !");
         }
+
 
         if (err == 0) {
 
@@ -131,7 +144,7 @@ public class RegisterFragment extends Fragment {
         mSubscriptions.add(NetworkUtil.getRetrofit().register(user)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(this::handleResponse,this::handleError));
+                .subscribe(this::handleResponse, this::handleError));
     }
 
     private void handleResponse(Response response) {
@@ -151,7 +164,7 @@ public class RegisterFragment extends Fragment {
             try {
 
                 String errorBody = ((HttpException) error).response().errorBody().string();
-                Response response = gson.fromJson(errorBody,Response.class);
+                Response response = gson.fromJson(errorBody, Response.class);
                 showSnackBarMessage(response.getMessage());
 
             } catch (IOException e) {
@@ -167,11 +180,11 @@ public class RegisterFragment extends Fragment {
 
         if (getView() != null) {
 
-            Snackbar.make(getView(),message,Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(getView(), message, Snackbar.LENGTH_SHORT).show();
         }
     }
 
-    private void goToLogin(){
+    private void goToLogin() {
 
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         LoginFragment fragment = new LoginFragment();

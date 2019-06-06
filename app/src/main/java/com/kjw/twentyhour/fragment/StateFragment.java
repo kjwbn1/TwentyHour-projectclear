@@ -100,6 +100,8 @@ public class StateFragment extends Fragment {
         TabViewSetting();
         initClickButton();
 
+
+
         return view;
     }
 

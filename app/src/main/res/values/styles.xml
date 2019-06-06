@@ -30,4 +30,11 @@
         <item name="android:colorBackground">@color/secondaryDarkColor</item>
     </style>
 
+
+    <style name="customTextView" parent="android:style/Widget.TextView">
+        <item name="android:fontFamily">@font/netmarblem</item>
+    </style>
+
+
+
 </resources>

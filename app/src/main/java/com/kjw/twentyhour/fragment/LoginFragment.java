@@ -1,16 +1,15 @@
 package com.kjw.twentyhour.fragment;
 
 
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +58,7 @@ public class LoginFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_login,container,false);
+        View view = inflater.inflate(R.layout.fragment_login, container, false);
         mSubscriptions = new CompositeSubscription();
         initSharedPreferences();
         initViews(view);
@@ -68,7 +67,7 @@ public class LoginFragment extends Fragment {
 
     private void initViews(View v) {
 
-        mEtEmail = (EditText) v.findViewById(R.id.et_email);
+        mEtEmail = (EditText) v.findViewById(R.id.tl_email);
         mEtPassword = (EditText) v.findViewById(R.id.et_password);
         mBtLogin = (Button) v.findViewById(R.id.btn_login);
         mTiEmail = (TextInputLayout) v.findViewById(R.id.ti_email);
@@ -76,7 +75,6 @@ public class LoginFragment extends Fragment {
         mProgressBar = (ProgressBar) v.findViewById(R.id.progress);
         mTvRegister = (TextView) v.findViewById(R.id.tv_register);
         mTvForgotPassword = (TextView) v.findViewById(R.id.tv_forgot_password);
-
 
 
         mBtLogin.setOnClickListener(view -> login());
@@ -112,7 +110,7 @@ public class LoginFragment extends Fragment {
 
         if (err == 0) {
 
-            loginProcess(email,password);
+            loginProcess(email, password);
             mProgressBar.setVisibility(View.VISIBLE);
 
         } else {
@@ -134,7 +132,7 @@ public class LoginFragment extends Fragment {
         mSubscriptions.add(NetworkUtil.getRetrofit(email, password).login()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(this::handleResponse,this::handleError));
+                .subscribe(this::handleResponse, this::handleError));
     }
 
     private void handleResponse(Response response) {
@@ -142,21 +140,16 @@ public class LoginFragment extends Fragment {
         mProgressBar.setVisibility(View.GONE);
 
         SharedPreferences.Editor editor = mSharedPreferences.edit();
-        editor.putString(Constants.TOKEN,response.getToken());
-        editor.putString(Constants.EMAIL,response.getMessage());
+        editor.putString(Constants.TOKEN, response.getToken());
+        editor.putString(Constants.EMAIL, response.getMessage());
         editor.apply();
 
         mEtEmail.setText(null);
         mEtPassword.setText(null);
 
-        Intent intent = new Intent(getActivity(),StateActivity.class);
+
+        Intent intent = new Intent(getActivity(), StateActivity.class);
         startActivity(intent);
-
-
-
-
-
-
     }
 
     private void handleError(Throwable error) {
@@ -170,7 +163,7 @@ public class LoginFragment extends Fragment {
             try {
 
                 String errorBody = ((HttpException) error).response().errorBody().string();
-                Response response = gson.fromJson(errorBody,Response.class);
+                Response response = gson.fromJson(errorBody, Response.class);
                 showSnackBarMessage(response.getMessage());
 
             } catch (IOException e) {
@@ -186,19 +179,19 @@ public class LoginFragment extends Fragment {
 
         if (getView() != null) {
 
-            Snackbar.make(getView(),message,Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(getView(), message, Snackbar.LENGTH_SHORT).show();
         }
     }
 
-    private void goToRegister(){
+    private void goToRegister() {
 
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         RegisterFragment fragment = new RegisterFragment();
-        ft.replace(R.id.fragmentFrame,fragment,RegisterFragment.TAG).addToBackStack(LoginFragment.TAG);
+        ft.replace(R.id.fragmentFrame, fragment, RegisterFragment.TAG).addToBackStack(LoginFragment.TAG);
         ft.commit();
     }
 
-    private void showDialog(){
+    private void showDialog() {
 
         ResetPasswordDialog fragment = new ResetPasswordDialog();
 

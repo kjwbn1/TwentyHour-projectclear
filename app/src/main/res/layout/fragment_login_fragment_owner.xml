@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+                name="fragment"
+                type="com.kjw.twentyhour.fragment.LoginFragmentOwner"/>
+
+
+
+    </data>
+
+
+    <android.support.constraint.ConstraintLayout
+
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".fragment.LoginFragmentOwner">
+
+
+        <Button
+                android:text="@string/lfg_login"
+                android:layout_width="0dp"
+                android:layout_height="48dp" android:id="@+id/btn_logi"
+                app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="16dp"
+                android:textColor="@color/accentColor"
+                android:background="@color/primaryColor" app:layout_constraintHorizontal_bias="0.0"
+                android:layout_marginTop="32dp" app:layout_constraintTop_toBottomOf="@+id/input_password"/>
+        <EditText
+                android:layout_width="0dp"
+                android:layout_height="45dp"
+                android:inputType="textPassword"
+                android:ems="10"
+                android:id="@+id/input_password" app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="16dp" app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="16dp"
+                app:layout_constraintHorizontal_bias="0.0"
+                android:hint="@string/lfo_hint_pw"
+                app:layout_constraintTop_toBottomOf="@+id/header_password"/>
+        <EditText
+
+                android:layout_width="0dp"
+                android:layout_height="45dp"
+                android:inputType="textEmailAddress"
+                android:ems="10"
+                android:id="@+id/input_email"
+                app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="16dp"
+                android:hint="@string/lfo_hint_email"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintTop_toBottomOf="@+id/header_email"
+        />
+        <TextView
+                android:text="@string/lfo_email"
+                android:fontFamily="@font/netmarblel"
+                android:textColor="@color/accentColor"
+                android:layout_width="0dp"
+                android:layout_height="19dp"
+                android:id="@+id/header_email"
+                android:layout_marginEnd="16dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="40dp"
+                app:layout_constraintTop_toBottomOf="@+id/title_text" app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="16dp"/>
+        <TextView
+                android:text="@string/lfo_pw"
+                android:fontFamily="@font/netmarblel"
+                android:textColor="@color/accentColor"
+                android:layout_width="0dp"
+                android:layout_height="20dp"
+                android:id="@+id/header_password"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="16dp" app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="338dp"
+                app:layout_constraintHorizontal_bias="1.0" android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/input_email"/>
+        <TextView
+                android:text="@string/lfo_login"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:textColor="@color/accentColor"
+                android:fontFamily="@font/netmarbleb"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:id="@+id/title_text" app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="16dp"
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="16dp"
+                app:layout_constraintHorizontal_bias="0.0"
+                android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/textView7"/>
+        <TextView
+                android:text="@string/lfo_pw_find"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/tv_find_password"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="16dp" app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="16dp" android:textAlignment="center"
+                app:layout_constraintHorizontal_bias="0.0" android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/btn_logi"/>
+        <TextView
+                android:text="@string/lfo_regiser"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/gotoregister"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="16dp" app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="16dp" android:textAlignment="center"
+                app:layout_constraintHorizontal_bias="0.0" android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/tv_find_password"/>
+        <TextView
+                android:text="@string/lfo_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView7"
+                android:layout_marginTop="48dp"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="8dp" app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="8dp" android:fontFamily="@font/netmarbleb" android:textSize="36sp"
+                app:layout_constraintHorizontal_bias="0.498"/>
+        <ProgressBar
+
+                style="?android:attr/progressBarStyle"
+                android:layout_width="82dp"
+                android:layout_height="84dp"
+                android:id="@+id/progressBar"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="8dp" app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="8dp" android:layout_marginTop="8dp"
+                app:layout_constraintTop_toTopOf="parent" android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+</layout>

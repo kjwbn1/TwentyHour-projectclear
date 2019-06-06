@@ -1,5 +1,7 @@
 package com.kjw.twentyhour.model;
 
+import com.android.volley.toolbox.StringRequest;
+
 public class User {
 
     private String name;
@@ -8,6 +10,7 @@ public class User {
     private String created_at;
     private String newPassword;
     private String token;
+    private int businessCode;
 
     public void setName(String name) {
         this.name = name;
@@ -39,5 +42,13 @@ public class User {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public int getBusinessCode() {
+        return businessCode;
+    }
+
+    public void setBusinessCode(int businessCode) {
+        this.businessCode = businessCode;
     }
 }

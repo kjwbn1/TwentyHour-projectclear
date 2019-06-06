@@ -2,240 +2,256 @@ package com.kjw.twentyhour;
 
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.LocationListener;
+import android.location.Location;
+
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 
+import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.view.MenuItem;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.kjw.twentyhour.data.Time;
 import com.kjw.twentyhour.dialogs.StoreSelectionDialog;
-import com.kjw.twentyhour.fragment.CalendarFragment;
-import com.kjw.twentyhour.fragment.ChangePasswordDialog;
-import com.kjw.twentyhour.fragment.ProfileFragment;
-import com.kjw.twentyhour.fragment.StateFragment;
+import com.kjw.twentyhour.fragment.*;
 import com.kjw.twentyhour.fragmenttofragmentinterface.FragmentDataSendInterface;
 import com.kjw.twentyhour.helper.BottomNavigationViewHelper;
-import com.kjw.twentyhour.listener.MyLocationListener;
+import com.kjw.twentyhour.listener.Subject;
+import com.kjw.twentyhour.map.NMapPOIflagType;
+import com.kjw.twentyhour.map.NMapViewerResourceProvider;
+import com.kjw.twentyhour.model.Store;
+import com.kjw.twentyhour.utils.Constants;
+import com.kjw.twentyhour.utils.CurrentLoactionSearch;
+import com.kjw.twentyhour.view.NmapActivity;
+import com.nhn.android.maps.maplib.NGeoPoint;
+import com.nhn.android.maps.overlay.NMapPOIdata;
+import com.nhn.android.maps.overlay.NMapPOIitem;
 
 
-public class StateActivity extends AppCompatActivity implements ChangePasswordDialog.Listener, CalendarFragment.onSetDateListener, FragmentDataSendInterface {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 
-    private BottomNavigationView bottomNavigationView;
-    private boolean a;
-    private boolean b;
-    private boolean c;
-    private boolean d;
+public class StateActivity extends AppCompatActivity implements ChangePasswordDialog.Listener,
+        CalendarFragment.onSetDateListener, FragmentDataSendInterface {
 
-    private String temp;
-    private Time time;
-
-//    int requestCode = 0;
-//    private static final int TAKE_TO_SELECTED_LUGGAGE = 2;
-//    private static final int TAKE_TO_CALENDARVIEW_RESULT = 1;
-//    DownLoadTask downLoadTask;
-//    private static long sayBackPress;
 
     public static final String TAG = StateActivity.class.getSimpleName();
-    private static final int TAKE_TO_PRAYGRROUND_RESULT = 0;
+    public static final int NOTIFICATION_ID = 888;
+    private static boolean isContactClickable;
+    private static boolean isHomeClickable;
+    private static boolean isSearchClickable;
+    private static boolean isMoreClickable;
 
+    public MainFragment mainFragment;
+    public ProfileFragment profileFragment;
+    public Toolbar toolbar;
+
+    private BottomNavigationView bottomNavigationView;
     public View contact;
     public View home;
     public View more;
     public View search;
+
+
+    private Time time;
+
+    public String shortestStore;
+
+    private SharedPreferences preference;
+    private SharedPreferences.Editor editor;
     private Bundle bundle;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_state_setting);
-//        -----------------------------------------------------------
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        LocationListener locationListener = new MyLocationListener();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
-            return;
-        }
-
-
-
-//        ===========================================================
-
-
-        ModelInit();
-        LoadFragmentState();
-        LoadDialogStoreSelection();
+        preferenceInit();
         initView();
-
-        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch(item.getItemId()){
-
-                    case R.id.action_contact:
-
-                        loadFragmentProfile();
-
-                        a = true;
-                        b = false;
-                        c = false;
-                        d = false;
+        setSupportActionBar(toolbar);
+        LoadMainFragment();
 
 
-                        if(a){
-                            contact.setClickable(false);
-                            home.setClickable(true);
-                            search.setClickable(true);
-                            more.setClickable(true);
-
-                        } else {
-                            contact.setClickable(true);
-                        }
-
-                        return true;
-
-                    case R.id.action_home:
-
-                        LoadFragmentState();
-
-
-                        a = false;
-                        b = true;
-                        c = false;
-                        d = false;
-
-                        if(b){
-                            contact.setClickable(true);
-                            home.setClickable(false);
-                            search.setClickable(true);
-                            more.setClickable(true);
-
-                        } else {
-                            home.setClickable(true);
-                        }
-
-
-                        return true;
-
-                    case R.id.action_search:
-
-                        a = false;
-                        b = false;
-                        c = true;
-                        d = false;
-
-                        if(c){
-
-                            contact.setClickable(true);
-                            home.setClickable(true);
-                            search.setClickable(false);
-                            more.setClickable(true);
-
-                        } else {
-                            search.setClickable(true);
-                        }
-
-                        return true;
-
-
-
-                    case R.id.action_more:
-
-                        a = false;
-                        b = false;
-                        c = false;
-                        d = true;
-
-                        if(d){
-                            contact.setClickable(true);
-                            home.setClickable(true);
-                            search.setClickable(true);
-                            more.setClickable(false);
-                        } else {
-                            contact.setClickable(true);
-                        }
-
-                        return true;
-
-                }
-                return false;
-            }
-        });
-//        BottomNavigationViewHelper.disableShiftMode(bottomNavigationView);
-
-
-
-    }
-
-    private void LoadDialogStoreSelection() {
-        StoreSelectionDialog storeSelectionDialog = new StoreSelectionDialog();
-        storeSelectionDialog.show(getSupportFragmentManager() , "aa");
-
-
-    }
-
-    private void ModelInit() {
         time = new Time();
+
+
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if(requestCode == TAKE_TO_PRAYGRROUND_RESULT) {
-                if (data.hasExtra("address")) {
-                    temp = data.getStringExtra("address");
-                    bundle = new Bundle();
-                    bundle.putString("address", temp);
+    private void preferenceInit() {
+        preference = PreferenceManager.getDefaultSharedPreferences(this);
+        editor = preference.edit();
+    }
+
+    private void initView() {
+
+        bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
+        bottomNavigationView.setSelectedItemId(R.id.action_home);
+        BottomNavigationViewHelper.disableShiftMode(bottomNavigationView);
+        toolbar = (Toolbar)findViewById(R.id.toolbar);
+        contact = (View) findViewById(R.id.action_contact);
+        home = (View) findViewById(R.id.action_home);
+        search = (View) findViewById(R.id.action_search);
+        more = (View) findViewById(R.id.action_more);
+
+
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            switch (item.getItemId()) {
+
+                case R.id.action_contact:
+
+                    loadFragmentProfile();
+
+                    isContactClickable = true;
+                    isHomeClickable = false;
+                    isSearchClickable = false;
+                    isMoreClickable = false;
+
+                    if (isContactClickable) {
+                        contact.setClickable(false);
+                        home.setClickable(true);
+                        search.setClickable(true);
+                        more.setClickable(true);
+                    } else {
+                        contact.setClickable(true);
+                    }
+
+                    return true;
+
+                case R.id.action_home:
+
+
+                    LoadMainFragment();
+                    isContactClickable = false;
+                    isHomeClickable = true;
+                    isSearchClickable = false;
+                    isMoreClickable = false;
+
+                    if (isHomeClickable) {
+                        contact.setClickable(true);
+                        home.setClickable(false);
+                        search.setClickable(true);
+                        more.setClickable(true);
+                    } else {
+                        home.setClickable(true);
+                    }
+
+                    return true;
+
+                case R.id.action_search:
 
                     LoadFragmentState();
-                }
+                    isContactClickable = false;
+                    isHomeClickable = false;
+                    isSearchClickable = true;
+                    isMoreClickable = false;
+
+                    if (isSearchClickable) {
+
+                        contact.setClickable(true);
+                        home.setClickable(true);
+                        search.setClickable(false);
+                        more.setClickable(true);
+                    } else {
+                        search.setClickable(true);
+                    }
+
+                    return true;
+
+                case R.id.action_more:
+
+                    Intent intent = new Intent(this, StoreRegisterActivity.class);
+                    startActivity(intent);
+
+
+                    isContactClickable = false;
+                    isHomeClickable = false;
+                    isSearchClickable = false;
+                    isMoreClickable = true;
+
+                    if (isMoreClickable) {
+                        contact.setClickable(true);
+                        home.setClickable(true);
+                        search.setClickable(true);
+                        more.setClickable(false);
+                    } else {
+                        contact.setClickable(true);
+                    }
+
+                    return true;
             }
-        }
+            return false;
+        });
+
+
     }
 
+    private void LoadMainFragment() {
+
+        bundle = new Bundle();
+        bundle.putString("shortestStore", shortestStore);
+
+        mainFragment = new MainFragment();
+        mainFragment.setArguments(bundle);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+
+        ft.replace(R.id.fragmentFrame, mainFragment);
+        ft.commit();
+    }
 
     private void LoadFragmentState() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         StateFragment stateFragment = new StateFragment();
         stateFragment.setArguments(bundle);
-        ft.replace(R.id.fragmentFrame, stateFragment , StateFragment.TAG);
+        ft.replace(R.id.fragmentFrame, stateFragment, StateFragment.TAG);
         ft.commit();
     }
-
 
     private void loadFragmentProfile() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ProfileFragment profileFragment = new ProfileFragment();
-        ft.replace(R.id.fragmentFrame,profileFragment,ProfileFragment.TAG);
+        profileFragment = new ProfileFragment();
+        ft.replace(R.id.fragmentFrame, profileFragment, ProfileFragment.TAG);
         ft.commit();
-
     }
-
 
     private void showSnackBarMessage(String message) {
 
-        Snackbar.make(findViewById(R.id.activity_profile),message,Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(findViewById(R.id.activity_profile), message, Snackbar.LENGTH_SHORT).show();
 
     }
 
@@ -244,89 +260,14 @@ public class StateActivity extends AppCompatActivity implements ChangePasswordDi
         super.onNewIntent(intent);
 
         bottomNavigationView.setSelectedItemId(R.id.action_home);
-
-
     }
 
-//    private void setListener() {
-//        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-//            @Override
-//            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-//
-//            }
-//
-//            @Override
-//            public void onPageSelected(int position) {
-//
-//                for(int i = 0; i< dotscount; i++){
-//                    dots[i].setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.nonactive_dot));
-//                }
-//
-//                dots[position].setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.active_dot));
-//
-//            }
-//
-//            @Override
-//            public void onPageScrollStateChanged(int state) {
-//
-//            }
-//        });
-//
-//    }
-
-    private void initView() {
-
-        bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
-        bottomNavigationView.setSelectedItemId(R.id.action_home);
-
-
-        contact = (View) findViewById(R.id.action_contact);
-        home    = (View) findViewById(R.id.action_home);
-        search  = (View) findViewById(R.id.action_search);
-        more    = (View) findViewById(R.id.action_more);
-
-
-
-
+    @Override
+    public void setDate(String ss) {
+        StateFragment sf = (StateFragment) getSupportFragmentManager().findFragmentByTag(StateFragment.TAG);
+        sf.setDate(ss);
 
     }
-
-//    private void setAdapter() {
-//        AdViewPagerAdapter viewPagerAdapter = new AdViewPagerAdapter(this);
-//        viewPager.setAdapter(viewPagerAdapter);
-//        dotscount = viewPagerAdapter.getCount();
-//        dotsCreate();
-//    }
-
-//    private void dotsCreate() {
-//        dots = new ImageView[dotscount];
-//
-//        for(int i = 0; i < dotscount; i++){
-//
-//            dots[i] = new ImageView(this);
-//            dots[i].setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.nonactive_dot));
-//
-//            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-//
-//            params.setMargins(8, 0 ,8, 0);
-//
-//            sliderDotspanel.addView(dots[i],params);
-//        }
-//
-//        dots[0].setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.active_dot));
-//
-//
-//    }
-//    @Override
-//    public void onBackPressed() {
-//        if (sayBackPress + 2000 > System.currentTimeMillis()){
-//            super.onBackPressed();
-//        }
-//        else{
-//            Toast.makeText(StateActivity.this, "Press once again to exit!", Toast.LENGTH_SHORT).show();
-//            sayBackPress = System.currentTimeMillis();
-//        }
-//    }
 
     @Override
     public void onPasswordChanged() {
@@ -335,16 +276,9 @@ public class StateActivity extends AppCompatActivity implements ChangePasswordDi
     }
 
     @Override
-    public void setDate(String ss) {
-        StateFragment sf = (StateFragment)getSupportFragmentManager().findFragmentByTag(StateFragment.TAG);
-        sf.setDate(ss);
-
-    }
-
-    @Override
     public void transferTab() {
 
-        StateFragment sf = (StateFragment)getSupportFragmentManager().findFragmentByTag(StateFragment.TAG);
+        StateFragment sf = (StateFragment) getSupportFragmentManager().findFragmentByTag(StateFragment.TAG);
         sf.transTab();
 
     }
@@ -363,11 +297,49 @@ public class StateActivity extends AppCompatActivity implements ChangePasswordDi
 
         time.setHoure(selectedHour);
         time.setMine(selectedMin);
-        StateFragment sf = (StateFragment)getSupportFragmentManager().findFragmentByTag(StateFragment.TAG);
+        StateFragment sf = (StateFragment) getSupportFragmentManager().findFragmentByTag(StateFragment.TAG);
         sf.setTime(time);
 
 
     }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        editor.putBoolean("selectedStore", false);
+        editor.remove(Constants.TOKEN);
+        editor.commit();
+
+    }
+
 
 }
 

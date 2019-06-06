@@ -1,9 +1,10 @@
 package com.kjw.twentyhour.fragment;
-import android.app.DialogFragment;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,7 +71,7 @@ public class ResetPasswordDialog extends DialogFragment {
 
     private void initViews(View v) {
 
-        mEtEmail = (EditText) v.findViewById(R.id.et_email);
+        mEtEmail = (EditText) v.findViewById(R.id.tl_email);
         mEtToken = (EditText) v.findViewById(R.id.et_token);
         mEtPassword = (EditText) v.findViewById(R.id.et_password);
         mBtResetPassword = (Button) v.findViewById(R.id.btn_reset_password);

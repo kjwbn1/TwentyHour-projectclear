@@ -1,236 +1,303 @@
 package com.kjw.twentyhour.view;
 
+import android.app.*;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.*;
 
 
+import com.google.gson.internal.LinkedTreeMap;
 import com.kjw.twentyhour.R;
 import com.kjw.twentyhour.adapter.FoodViewAdapter;
-import com.kjw.twentyhour.adapter.SelectedFoodViewAdapter;
-import com.kjw.twentyhour.customlayout.swipemenulistview.SwipeMenuListView;
-import com.kjw.twentyhour.data.Food;
-import com.kjw.twentyhour.fragment.CalculartorFragment;
+import com.kjw.twentyhour.fragment.SelectedMenuListFragment;
+import com.kjw.twentyhour.model.OrderSheet;
+import com.kjw.twentyhour.model.Product;
+import com.kjw.twentyhour.model.Response;
+import com.kjw.twentyhour.network.NetworkUtil;
 
-import java.io.Serializable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
+
+import java.io.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class MenuSelectionView extends AppCompatActivity {
 
+    private static final String TAG = "MenuSelectionView";
+    private static final String CHANNEL_ID = "내꺼야";
+    private List<Product> noSelectedMenuData;
+    private List<Product> selectedMenuData;
+    private Object data;
 
-    private SwipeMenuListView mListView;
-
-
-    List<Food> foodData;
-    List<Food> selectedFoodData;
-    Food food[] = new Food[5];
-    int totalprice = 0 ;
-
-    String selectedPrice;
-    String selectedFoodName;
-    int selectedPosition;
-    ArrayList<Food> selectedFood;
-
-    static int result = 0;
-
+    int overlapPosition;
+    int currentSelectedMenuData;
+    int clickMenuDataPosition;
+    int totalprice = 0;
     Bundle bundle;
 
-    CalculartorFragment calculartorFragment;
-
-
-
-    SelectedFoodViewAdapter selectedFoodViewAdapter;
-
-    ListView listView;
-
     FragmentTransaction fragmentTransaction;
+    SelectedMenuListFragment selectedMenuListFragment;
 
-    TextView totalPriceTextView;
+    private OrderSheet orderSheet;
+    private ListView listView;
+    private TextView menuItemPrice;
+    private TextView menuItemName;
+    private TextView totalPriceTextView;
+    private Button btOrderConfirm;
+    private ProgressBar progressBar;
+
+    private CompositeSubscription mSubscription;
+    private SharedPreferences mPreference;
+    private String name;
+    public Product product;
+    private boolean isOverlap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_menu_selection_view);
+        setContentView(R.layout.activity_menu_selection);
+        initalize();
+        initNetwork();
+        initView();
+        mPreference = PreferenceManager.getDefaultSharedPreferences(this);
+        name = mPreference.getString("email", "");
+        btOrderConfirm.setOnClickListener(v -> {
 
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        listView = (ListView)findViewById((R.id.foodlist));
-//        mListView = (SwipeMenuListView)findViewById(R.id.selected_Food_list);
+            builder.setPositiveButton(R.string.ok, (dialog, id) -> {
+                postOrder(orderSheet);
+                createNotificationChannel();
+                notificationInvoke();
 
+            });
+            builder.setNegativeButton(R.string.cancel, (dialog, id) -> dismissDialog(id));
 
-//        calculartorFragment = new CalculartorFragment();
+            AlertDialog dialog = builder.create();
+            dialog.show();
 
 
 
-        foodData         = new ArrayList<>();
-
-        totalPriceTextView = (TextView) findViewById(R.id.total_price_text_view);
-
-
-        Food kimbob = new Food("김치1", R.drawable.kimbob, "8000" , "참치들어감");
-        Food pizza1 = new Food("김치2", R.drawable.pizza , "8000" , "파인애플 들어감");
-        Food pizza2 = new Food("김치3", R.drawable.pizza , "8000" , "파인애플 들어감");
-        Food pizza3 = new Food("김치4", R.drawable.pizza , "8000" , "파인애플 들어감");
-        Food pizza4 = new Food("김치5", R.drawable.pizza , "8000" , "파인애플 들어감");
-        Food pizza5 = new Food("김치6", R.drawable.pizza , "8000" , "파인애플 들어감");
-
-        foodData.add(kimbob);
-        foodData.add(pizza1);
-        foodData.add(pizza2);
-        foodData.add(pizza3);
-        foodData.add(pizza4);
-        foodData.add(pizza5);
-
-        selectedFood = new ArrayList<>();
-
-
-
-        FoodViewAdapter foodViewAdapter = new FoodViewAdapter(getApplicationContext(), R.layout.not_selected_menu_item, foodData);
-
-
-        listView.setAdapter(foodViewAdapter);
-
-
-
-
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-
-
-                TextView price = view.findViewById(R.id.price);
-                TextView foodName = view.findViewById(R.id.food_name);
-//
-
-
-
-                Food food = new Food(foodName.getText().toString() , price.getText().toString());
-
-                totalprice += Integer.parseInt(price.getText().toString());
-
-                selectedFood.add(food);
-
-
-
-
-                totalPriceTextView.setText("총합계: "+ String.valueOf(totalprice));
-
-                bundle = new Bundle();
-                bundle.putSerializable("selectedFood", (Serializable)selectedFood);
-
-
-                calculartorFragment = new CalculartorFragment();
-
-                fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                calculartorFragment.setArguments(bundle);
-
-
-
-                fragmentTransaction.replace(R.id.calculator , calculartorFragment);
-                fragmentTransaction.commit();
-
-
-
-
-
-
-
-//                foodViewAdapter.notifyDataSetChanged();
-
-
-
-
-
-
-
-
-//                selectedFoodName = foodName.getText().toString();
-//                selectedPrice = price.getText().toString();
-//                selectedPosition = position;
-//
-//                selectedFoodData = new ArrayList<>();
-//
-//                food[selectedPosition] = new Food(selectedFoodName , selectedPrice);
-//
-//                selectedFoodData.add(food[selectedPosition]);
-//
-//
-//                SelectedFoodViewAdapter selectedFoodViewAdapter = new SelectedFoodViewAdapter(getApplicationContext(), R.layout.selected_menu_item, selectedFoodData );
-//
-//                selectedFoodList.setAdapter(selectedFoodViewAdapter);
-//
-//                selectedFoodViewAdapter.notifyDataSetChanged();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//                Toast.makeText(getApplicationContext() ,strprice ,Toast.LENGTH_LONG  ).show();
-            }
         });
+    }
 
+
+    private void notificationInvoke() {
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_favorite_24px)
+                .setContentTitle("스타벅스")
+                .setContentText("고객님 빠르게 준비하겠습니다.")
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setDefaults(Notification.DEFAULT_VIBRATE)
+                .setDefaults(NotificationCompat.DEFAULT_SOUND);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+        notificationManager.notify(777, mBuilder.build());
+    }
+
+    private void postOrder(OrderSheet orderSheet) {
+        mSubscription.add(
+                NetworkUtil.getRetrofit().order(orderSheet)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(this::handleResponse, this::handleError));
+    }
+
+    private void handleResponse(Response response) {
+
+        Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_LONG).show();
+    }
+
+    private void initalize() {
+        noSelectedMenuData = new ArrayList<>();
+        selectedMenuData = new ArrayList<>();
+        orderSheet = new OrderSheet();
+    }
+
+
+    private void initNetwork() {
+        mSubscription = new CompositeSubscription();
+        mSubscription.add(NetworkUtil.getRetrofit().getProduct()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(this::handleResponse, this::handleError));
+    }
+
+    private void initView() {
+        totalPriceTextView = (TextView) findViewById(R.id.total_price_text_view);
+        progressBar = (ProgressBar) findViewById(R.id.loading_menu);
+        btOrderConfirm = (Button) findViewById(R.id.btn_order_confirm);
+    }
+
+    private void handleResponse(Product[] product) {
+        progressBar.setVisibility(View.VISIBLE);
+        List<Bitmap> bmpArray = new ArrayList<>();
+        for (int o = 0; product.length > o; o++) {
+            data = product[o].getImg().getData();
+            LinkedTreeMap<String, ArrayList<Double>> listLinkedTreeMap = (LinkedTreeMap) data;
+            ArrayList<Double> bitmapArray = listLinkedTreeMap.get("data");
+
+            int h = bitmapArray.size();
+            byte[] f = new byte[h];
+            for (int i = 0; h > i; i++) {
+
+                double g = (double) bitmapArray.get(i);
+                int k = (int) g;
+                f[i] = (byte) k;
+
+            }
+            byte[] a = f;
+            Bitmap bitmap = BitmapFactory.decodeByteArray(a, 0, bitmapArray.size());
+            bmpArray.add(bitmap);
+            noSelectedMenuData.add(product[o]);
+
+//            noSelectedListViewInitialize(bmpArray);
+
+        }
+        noSelectedListViewInitialize(bmpArray);
+    }
+
+    private void handleError(Throwable e) {
 
 
     }
 
-//    @Override
-//    public  boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-//
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-//
-//        if (id == R.id.action_left) {
-//            mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_LEFT);
-//            return true;
-//        }
-//        if (id == R.id.action_right) {
-//            mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_RIGHT);
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
+    private void noSelectedListViewInitialize(List<Bitmap> bmpArray) {
+        listViewAdapterSetting(bmpArray);
+        listView.setOnItemClickListener((parent, menuView, position, id) -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+// Add the buttons
+            builder.setPositiveButton(R.string.ok, (dialog, id1) -> {
+                menuViewInit(menuView);
+                productSetting(position);
+                totalPriceCal();
+                orderSheetSetting();
+                startSelectedMenuListFragment();
+            });
+            builder.setNegativeButton(R.string.cancel, (dialog, id12) -> {
+
+            });
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+        });
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    private void listViewAdapterSetting(List<Bitmap> bmpArray) {
+        FoodViewAdapter foodViewAdapter = new FoodViewAdapter(this, R.layout.not_selected_menu_item, noSelectedMenuData, bmpArray);
+        listView = findViewById(R.id.foodlist);
+        listView.setAdapter(foodViewAdapter);
+        foodViewAdapter.notifyDataSetChanged();
+    }
+
+    private void menuViewInit(View view) {
+        menuItemPrice = view.findViewById(R.id.tv_menu_item_price);
+        menuItemName = view.findViewById(R.id.tv_menu_item_name);
+    }
+
+    private void productSetting(int k) {
+
+        checkOverlapPostion();
+        product = new Product();
+
+        if (isOverlap == true) {
+            product = selectedMenuData.get(overlapPosition);
+            selectedMenuData.get(overlapPosition).setQuantity(1);
+
+        } else {
+            product.setPrice(menuItemPrice.getText().toString());
+            product.setProduct(menuItemName.getText().toString());
+            product.setQuantity(1);
+            selectedMenuData.add(product);
+        }
 
 
+    }
+
+    private void checkOverlapPostion() {
 
 
-//    public int add(ArrayList<Food> selectedFood) {
-//        for (int i = 0; i < selectedFood.size(); i++) {
-//
-//            int results = Integer.parseInt(selectedFood.get(i).getPrice());
-//
-//            result +=results;
-//
-//        }
-//        return result;
-//    }
+        for (int i = 0; selectedMenuData.size() > i; i++) {
+            if (selectedMenuData.get(i).getProduct() == menuItemName.getText().toString()) {
+                isOverlap = true;
+                overlapPosition = i;
+                return;
+            } else {
+                isOverlap = false;
+            }
+        }
 
+    }
 
+    private void totalPriceCal() {
+        totalprice += Integer.parseInt(product.getPrice());
+        totalPriceTextView.setText("총합계: " + String.valueOf(totalprice));
+    }
 
+    private void orderSheetSetting() {
 
+        orderSheet.name = name;
+        orderSheet.totalPrice = totalprice;
+        orderSheet.product = selectedMenuData;
+//        orderSheet.product.add(product);
+    }
 
+    private void startSelectedMenuListFragment() {
+        bundle = new Bundle();
+        bundle.putSerializable("selectedMenuData", (Serializable) selectedMenuData);
+        selectedMenuListFragment = new SelectedMenuListFragment();
+        selectedMenuListFragment.setArguments(bundle);
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.calculator, selectedMenuListFragment);
+        fragmentTransaction.commit();
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "내꼬야";
+            String description = "라비앙로즈";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mSubscription.unsubscribe();
+    }
 }

@@ -5,40 +5,47 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.kjw.twentyhour.R;
-import com.kjw.twentyhour.data.Food;
+import com.kjw.twentyhour.model.OrderSheet;
+import com.kjw.twentyhour.model.Product;
+import com.kjw.twentyhour.model.Response;
+import com.kjw.twentyhour.network.NetworkUtil;
+import rx.Scheduler;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 import java.util.List;
 
 
 public class SelectedFoodViewAdapter extends BaseAdapter {
 
-    private List<Food> selectedFoodData;
+    private List<Product> selectedMenuData;
     private int layout;
     private LayoutInflater inflater;
 
+    private Button orderConfirm;
+    public  OrderSheet orderSheet;
 
-    public SelectedFoodViewAdapter(Context context , int layout, List<Food> selectedFoodData){
 
-        this.inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.selectedFoodData = selectedFoodData ;
+    public SelectedFoodViewAdapter(Context context, int layout, List<Product> selectedMenuData) {
+
+        this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.selectedMenuData = selectedMenuData;
         this.layout = layout;
     }
 
 
-
-
-
     @Override
     public int getCount() {
-        return selectedFoodData.size();
+        return selectedMenuData.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return selectedFoodData.get(position).getFoodName();
+        return selectedMenuData.get(position);
     }
 
     @Override
@@ -49,27 +56,38 @@ public class SelectedFoodViewAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-
         if (convertView == null) {
-
             convertView = inflater.inflate(layout, parent, false);
         }
 
-        Food food = selectedFoodData.get(position);
+        Product product = selectedMenuData.get(position);
+
+
+//        orderConfirm = parent.findViewById(R.id.btn_order_confirm);
+//        orderConfirm.setOnClickListener(v -> {
+//
+//            postOrder(orderSheet);
+//
+//
+//        });
 
 
         TextView price = (TextView) convertView.findViewById(R.id.selected_price);
-
-        price.setText(food.getPrice());
-
         TextView foodName = (TextView) convertView.findViewById(R.id.selected_food_name);
-        foodName.setText(food.getFoodName());
 
-
+        price.setText(product.getPrice());
+        foodName.setText(product.getProduct());
 
 
         return convertView;
-
-
     }
+
+
+
+
+
+
+
+
+
 }

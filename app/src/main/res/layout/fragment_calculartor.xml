@@ -2,12 +2,12 @@
 
 
 <com.kjw.twentyhour.customlayout.swipemenulistview.SwipeMenuListView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/selected_Food_list"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".fragment.CalculartorFragment">
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/selected_Food_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".fragment.SelectedMenuListFragment">
 
 </com.kjw.twentyhour.customlayout.swipemenulistview.SwipeMenuListView>
 

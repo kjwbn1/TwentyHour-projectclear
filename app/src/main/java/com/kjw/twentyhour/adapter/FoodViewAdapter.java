@@ -1,6 +1,7 @@
 package com.kjw.twentyhour.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,41 +11,38 @@ import android.widget.TextView;
 
 import com.kjw.twentyhour.R;
 import com.kjw.twentyhour.data.Food;
+import com.kjw.twentyhour.model.Product;
+import com.kjw.twentyhour.network.NetworkUtil;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 import java.util.List;
 
 public class FoodViewAdapter extends BaseAdapter {
 
-    private List<Food> foodData;
-    private int layout;
+    private List<Product> products;
+    private List<Bitmap> bitmaps;
     private LayoutInflater inflater;
+    private int layout;
 
 
+    public FoodViewAdapter(Context context, int layout, List<Product> products, List<Bitmap> bitmaps) {
 
-
-    public  FoodViewAdapter(Context context , int layout, List<Food> foodData)
-    {
-
-        this.inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.foodData = foodData;
+        this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.layout = layout;
-
+        this.products = products;
+        this.bitmaps = bitmaps;
     }
-
-
-
-
-
 
 
     @Override
     public int getCount() {
-        return foodData.size();
+        return products.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return foodData.get(position).getDescription();
+        return products.get(position);
     }
 
     @Override
@@ -60,21 +58,22 @@ public class FoodViewAdapter extends BaseAdapter {
             convertView = inflater.inflate(layout, parent, false);
         }
 
-        Food food = foodData.get(position);
+        Product product = products.get(position);
+        Bitmap bitmap = bitmaps.get(position);
 
+        ImageView imgMenuItem = (ImageView) convertView.findViewById(R.id.img_menu_item);
+        imgMenuItem.setScaleType(ImageView.ScaleType.FIT_XY);
+        imgMenuItem.setAdjustViewBounds(true);
+        imgMenuItem.setImageBitmap(bitmap);
 
-        ImageView foodImage = (ImageView) convertView.findViewById(R.id.food);
-        foodImage.setImageResource(food.getFoodImage());
+        TextView tvMenuItemPrice = (TextView) convertView.findViewById(R.id.tv_menu_item_price);
+        tvMenuItemPrice.setText(product.getPrice());
 
-        TextView price = (TextView) convertView.findViewById(R.id.price);
+        TextView tvMenuItemName = (TextView) convertView.findViewById(R.id.tv_menu_item_name);
+        tvMenuItemName.setText(product.getProduct());
 
-        price.setText(food.getPrice());
-
-        TextView foodName = (TextView) convertView.findViewById(R.id.food_name);
-        foodName.setText(food.getFoodName());
-
-        TextView descrption = (TextView) convertView.findViewById(R.id.food_description);
-        descrption.setText(food.getDescription());
+        TextView tvMenuDescription = (TextView) convertView.findViewById(R.id.tv_menu_description);
+        tvMenuDescription.setText(product.getDescription());
 
         return convertView;
     }

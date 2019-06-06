@@ -2,7 +2,6 @@
     <string name="app_name">TwentyHour</string>
 
 
-
     <string name="contact">내정보</string>
     <string name="search">검색</string>
     <string name="home">홈</string>
@@ -15,10 +14,12 @@
     <string name="hint_email">이메일</string>
     <string name="hint_password">비밀번호</string>
     <string name="btn_link_to_register">아직 회원이 아닌가요? 지금 회원가입하세요.</string>
-    <string name="btn_link_to_login">이미 등록된 회원입니다. 로그인 해주세요.</string>
+    <string name="btn_link_to_login">이미 등록된 회원이라면 로그인하기</string>
     <string name="name">이름</string>
     <string name="btn_link_to_resetpassword">비밀번호를 잊으셨나요?</string>
 
+    <string name="cb_personal">개인</string>
+    <string name="cb_business">점주</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
@@ -28,11 +29,33 @@
     <string name="login">로그인</string>
 
     <string name="confirm">확인</string>
+    <string name="select">선택</string>
     <string name="cancel">취소</string>
     <string name="later">나중에</string>
 
     <string name="header1">비엔나커피</string>
     <string name="header2">ㅇ어ㅏ링마ㅓ</string>
 
-    <!--상태설정창-->
+    <string name="brand_name">비엔나 커피 하우스, Wien1683</string>
+    <string name="brand_description">유네스코 무형문화유산에 등록된,300년 전통의 역사와 문화를 간직한 비엔나커피하우스로 초대합니다</string>
+
+    <string name="siren_order">Siren Order</string>
+    <string name="credit_card">Card</string>
+    <string name="membership">Membership</string>
+    <string name="lfg_login">로그인</string>
+    <string name="lfo_hint_pw">비밀번호를 입력하세요.</string>
+    <string name="lfo_hint_email">이메일을 입력하세요.</string>
+    <string name="lfo_email">이메일</string>
+    <string name="lfo_pw">비밀번호</string>
+    <string name="lfo_login">로그인</string>
+    <string name="lfo_bc">사업자번호</string>
+    <string name="lfo_hint_bc">사업자번호를 입력하세요.</string>
+    <string name="lfo_pw_find">비밀번호 찾기</string>
+    <string name="lfo_regiser">회원가입</string>
+    <string name="lfo_title">사업자</string>
+    <string name="permission_rationale">ㅇㅁㄴㅇ</string>
+    <string name="permission_denied_explanation">ㄴㅇㅁㄴㅇㅁㅇ</string>
+    <string name="settings">ㅁㄴㅇㅁㄴㅇ</string>
+    <string name="ok">btn_confirm</string>
+
 </resources>

@@ -147,7 +147,6 @@ public class ChangePasswordDialog extends DialogFragment {
     }
 
     private void handleResponse(Response response) {
-
         mProgressBar.setVisibility(View.GONE);
         mListener.onPasswordChanged();
         dismiss();

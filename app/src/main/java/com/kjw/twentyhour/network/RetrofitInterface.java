@@ -4,9 +4,8 @@ package com.kjw.twentyhour.network;
 
 
 
-import com.kjw.twentyhour.model.Response;
-import com.kjw.twentyhour.model.Status;
-import com.kjw.twentyhour.model.User;
+import com.kjw.twentyhour.listener.StoreBranch;
+import com.kjw.twentyhour.model.*;
 
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -17,8 +16,20 @@ import rx.Observable;
 
 public interface RetrofitInterface {
 
+
     @POST("users")
     Observable<Response> register(@Body User user);
+
+    @POST("owners")
+    Observable<Response> registerOwner(@Body Owner owner);
+
+
+    @POST("orders")
+    Observable<Response> order(@Body OrderSheet orderSheet);
+
+
+//   @POST("products")
+//    Observable<Response> productRegister(@Body Product product );
 
     @POST("authenticate")
     Observable<Response> login();
@@ -26,8 +37,14 @@ public interface RetrofitInterface {
     @POST("status")
     Observable<Response> statusRegister(@Body Status status);
 
+    @GET("stores/{storeName}")
+    Observable<StoreBranch> getStore(@Path("storeName") String storeName);
+
     @GET("users/{email}")
     Observable<User> getProfile(@Path("email") String email);
+
+    @GET("products/all")
+    Observable<Product[]> getProduct();
 
     @PUT("users/{email}")
     Observable<Response> changePassword(@Path("email") String email, @Body User user);
